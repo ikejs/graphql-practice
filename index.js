@@ -2,60 +2,49 @@ const express = require('express');
 const app = express();
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
-
-const allMeals = { 
-  breakfast: 'toast', 
-  lunch: 'noodles', 
-  dinner: 'pizza' 
-};
-
-const petList = [
-	{ name: 'Fluffy', species: 'Dog' },
-	{ name: 'Sassy', species: 'Cat' },
-	{ name: 'Goldberg', species: 'Frog' }
-];
+const users = require('./test-data/users');
+const songs = require('./test-data/songs');
 
 const schema = buildSchema(`
-enum MealTime {
-  breakfast
-  lunch 
-  dinner
+enum RoleEnum {
+  ADMIN
+  LISTENER
+  ARTIST
 }
 
-type About {
-  message: String!
+enum GenreEnum {
+  FUNK
+  POP
+  HIPHOP
+  EDM
 }
 
-type Meal {
-  description: String!
-}
-
-type Pet {
+type User {
   name: String!
-  species: String!
+  username: String!
+  email: String!
+  password: String!
+  role: RoleEnum!
+  songs: [Song!]!
+}
+
+type Song {
+  title: String!
+  artist: User!
+  genre: GenreEnum!
 }
 
 type Query {
-  getAbout: About
-  getMeal(time: MealTime!): Meal
-  getPet(id: Int!): Pet
-  allPets: [Pet!]!
+  getUser(id: String!): User
+  allSongs: [Song]
 }`);
 
 const root = {
-  getAbout: () => {
-    return { message: 'Hello World' };
-  },
-  getMeal: ({ time }) => {
-    const meal = allMeals[time];
-    return { description: meal };
+  getUser: ({ _id }) => {
+    const user = users.find((user, i) => user._id == _id ? true : false)
+    return user
 	},
-  getPet: ({ id }) => {
-    return petList[id];
-  },
-  allPets: () => {
-    return petList;
-  }
+  allSongs: () => songs
 };
 
 app.use('/graphql', graphqlHTTP({
